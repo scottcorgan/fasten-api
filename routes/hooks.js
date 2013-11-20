@@ -1,9 +1,20 @@
 var hooks = require('../server').hooks;
-var socket = require('../socket');
+var notify = require('../notify');
+var _ = require('lodash');
 
-hooks.post(/^\/([a-z0-9_-]+)\/?([\w+\/?]+)?$/, function (req, res) {
-  var hook = req.params.join('/');
+hooks.post('*', forceEndpoint, function (req, res) {
+  var pathname = req.params[0];
+  var hook = _.rest(pathname.split('/')).join('_');
+  var data = req.body || {};
   
-  socket.sockets.in(hook).emit('hooked', req.body);
+  notify(hook, 'hooked', data);
+  
   res.send();
 });
+
+function forceEndpoint (req, res, next) {
+  var pathname = req.params[0];
+  
+  if (!pathname || pathname === '/') return res.send(404);
+  next();
+}

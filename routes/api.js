@@ -4,12 +4,8 @@ var _ = require('lodash');
 var async = require('async');
 var api = require('../server').api;
 var helpers = require('../helpers');
-
 var Firebase = require('firebase');
-var fastenRef = new Firebase('https://fasten.firebaseio.com');
-
-var USERBIN_APP_ID = '992169816415538';
-var USERBIN_APP_SECRET = '9ZtcCpSrkBpqovb8BiHGayJS63es3qrn';
+var fastenRef = new Firebase(process.env.FIREBASE_URL);
 
 api.get('/hooks', authenticateRequest, function (req, res) {
   getUserHooks(req.user, function (hooks) {
@@ -74,9 +70,9 @@ function authenticateRequest (req, res, next) {
   var sessionId = req.headers.authorization;
   
   request.get('https://api.userbin.com/sessions/' + sessionId, {
-    'auth': {
-        'user': USERBIN_APP_ID,
-        'pass': USERBIN_APP_SECRET,
+    auth: {
+        'user': process.env.USERBIN_APP_ID,
+        'pass': process.env.USERBIN_APP_SECRET,
         'sendImmediately': false
       }
   }, function (err, response, body) {

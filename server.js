@@ -12,19 +12,12 @@ var hooks = express();
 hooks.use(cors());
 hooks.use(express.bodyParser());
 
-var stream = express();
-stream.use(cors());
-stream.use(express.cookieParser());
-stream.use(express.bodyParser());
-
 var server = express();
-server.use(express.vhost('api.fasten.dev', api));
-server.use(express.vhost('hooks.fasten.dev', hooks));
-server.use(express.vhost('stream.fasten.dev', stream));
+server.use(express.vhost(process.env.API_HOST, api));
+server.use(express.vhost(process.env.HOOKS_HOST, hooks));
 
 module.exports = {
   api: api,
   hooks: hooks,
-  stream: stream,
   server: server
 };
