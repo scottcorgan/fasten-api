@@ -9,4 +9,9 @@ var notify = function (hook, channel, body) {
   pusher.trigger(hook, channel, body);
 };
 
+notify.authorize = function (res, socketId, channel) {
+  var auth = pusher.auth(socketId, channel);
+  res.send(auth);
+};
+
 module.exports = notify;

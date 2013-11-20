@@ -5,6 +5,8 @@ var async = require('async');
 var api = require('../server').api;
 var helpers = require('../helpers');
 var Firebase = require('firebase');
+var authenticateSocket = require('../socket_auth');
+var notify = require('../notify');
 var fastenRef = new Firebase(process.env.FIREBASE_URL);
 
 api.get('/hooks', authenticateRequest, function (req, res) {
@@ -64,6 +66,22 @@ api.del(/^\/hooks\/(([a-z0-9_-]+\/?)*)$/, authenticateRequest, function (req, re
 });
 
 
+api.post('/pusher/auth', function (req, res) {
+  if (!req.body.socket_id || !req.body.channel_name) return res.send(403);
+  
+  var socketId = req.body.socket_id;
+  var channel = req.body.channel_name;
+  var host = req.headers.origin;
+  var endpoint = channel
+    .replace(/^private\-/, '')
+    .replace('_', '/');
+  
+  authenticateSocket(endpoint, host, function (err, hook) {
+    if (err) return res.send(403);
+    notify.authorize(res, socketId, channel);
+  });
+});
+
 function authenticateRequest (req, res, next) {
   if (!req.headers.authorization) return res.send(403);
   
@@ -77,6 +95,9 @@ function authenticateRequest (req, res, next) {
       }
   }, function (err, response, body) {
     var session = JSON.parse(body);
+    
+    if (!session.user) return res.send(403);
+    
     req.user = session.user
     next();
   });
