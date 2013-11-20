@@ -1,12 +1,30 @@
-var http = require('http');
 var express = require('express');
-var app = express();
-var server = http.createServer(app);
+var cors = require('cors');
 
-app.use(express.cookieParser());
-app.use(express.bodyParser());
-app.use(express.static(__dirname + '/public'));
+var api = express();
+api.use(cors());
+api.use(express.compress());
+api.use(express.cookieParser());
+api.use(express.bodyParser());
+api.use(express.static(__dirname + '/public'));
 
-server.app = app;
+var hooks = express();
+hooks.use(cors());
+hooks.use(express.bodyParser());
 
-module.exports = server;
+var stream = express();
+stream.use(cors());
+stream.use(express.cookieParser());
+stream.use(express.bodyParser());
+
+var server = express();
+server.use(express.vhost('api.fasten.dev', api));
+server.use(express.vhost('hooks.fasten.dev', hooks));
+server.use(express.vhost('stream.fasten.dev', stream));
+
+module.exports = {
+  api: api,
+  hooks: hooks,
+  stream: stream,
+  server: server
+};

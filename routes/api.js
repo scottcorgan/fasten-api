@@ -1,14 +1,17 @@
-var app = require('../server').app;
+var request = require('request');
 var hat = require('hat');
-var socket = require('../socket');
-var helpers = require('../helpers');
 var _ = require('lodash');
 var async = require('async');
+var api = require('../server').api;
+var helpers = require('../helpers');
+
 var Firebase = require('firebase');
 var fastenRef = new Firebase('https://fasten.firebaseio.com');
 
+var USERBIN_APP_ID = '992169816415538';
+var USERBIN_APP_SECRET = '9ZtcCpSrkBpqovb8BiHGayJS63es3qrn';
 
-app.get('/hooks', authenticateRequest, function (req, res) {
+api.get('/hooks', authenticateRequest, function (req, res) {
   getUserHooks(req.user, function (hooks) {
     async.map(_.keys(hooks), function (key, cb) {
       hookRef(key).once('value', function (snapshot) {
@@ -21,7 +24,7 @@ app.get('/hooks', authenticateRequest, function (req, res) {
   });
 });
 
-app.post('/hooks', authenticateRequest, function (req, res) {
+api.post('/hooks', authenticateRequest, function (req, res) {
   var token = hat();
   var payload = req.body;
   var encodedEndpoint = helpers.encodePath(payload.endpoint);
@@ -48,7 +51,7 @@ app.post('/hooks', authenticateRequest, function (req, res) {
   });
 });
 
-app.del(/^\/hooks\/(([a-z0-9_-]+\/?)*)$/, authenticateRequest, function (req, res) {
+api.del(/^\/hooks\/(([a-z0-9_-]+\/?)*)$/, authenticateRequest, function (req, res) {
   var endpoint = req.params[0];
   var encodedEndpoint = helpers.encodePath(endpoint);
   
@@ -65,31 +68,28 @@ app.del(/^\/hooks\/(([a-z0-9_-]+\/?)*)$/, authenticateRequest, function (req, re
 });
 
 
-// TODO: rename this base url
-app.post(/^\/hooks\/([a-z0-9_-]+)\/?([\w+\/?]+)?$/, function (req, res) {
-  var hook = req.params.join('/');
-  
-  socket.sockets.in(hook).emit('hooked', req.body);
-  res.send();
-});
-
-
 function authenticateRequest (req, res, next) {
   if (!req.headers.authorization) return res.send(403);
-  fastenRef.auth(req.headers.authorization, function (err, user) {
-    if (err) return res.send(403);
-    
-    req.user = user;
+  
+  var sessionId = req.headers.authorization;
+  
+  request.get('https://api.userbin.com/sessions/' + sessionId, {
+    'auth': {
+        'user': USERBIN_APP_ID,
+        'pass': USERBIN_APP_SECRET,
+        'sendImmediately': false
+      }
+  }, function (err, response, body) {
+    var session = JSON.parse(body);
+    req.user = session.user
     next();
   });
 }
 
 function userHooksRef (user) {
-  var email = helpers.encodeEmail(user.auth.email);
-  
   return fastenRef
     .child('users')
-    .child(email)
+    .child(user.id)
     .child('hooks');
 }
 

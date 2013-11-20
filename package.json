@@ -29,6 +29,8 @@
     "lodash": "~2.3.0",
     "async": "~0.2.9",
     "pretty-print": "~0.2.2",
-    "require-dir": "~0.1.0"
+    "require-dir": "~0.1.0",
+    "cors": "~2.1.0",
+    "request": "~2.27.0"
   }
 }

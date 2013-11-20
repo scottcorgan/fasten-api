@@ -1,5 +1,5 @@
 var url = require('url');
-var server = require('./server');
+var server = require('./server').stream;
 var io = require('socket.io').listen(server);
 var authenticate = require('./auth');
 var feedback = require('feedback');

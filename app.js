@@ -1,5 +1,5 @@
 var feedback = require('feedback');
-var server = require('./server');
+var server = require('./server').server;
 var socket = require('./socket');
 var requireDir = require('require-dir');
 var PORT = process.env.PORT || 4000;
