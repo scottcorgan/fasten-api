@@ -6,7 +6,7 @@ var pusher = new Pusher({
 });
 
 var notify = function (hook, channel, body) {
-  pusher.trigger(hook, channel, body);
+  pusher.trigger('private-' + hook, channel, body);
 };
 
 notify.authorize = function (res, socketId, channel) {
